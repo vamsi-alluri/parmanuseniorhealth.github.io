@@ -1,3 +1,7 @@
+# Dev only: Decap ignores this unless the browser is on localhost. With
+# `npx decap-server` running, /admin/ edits the working tree instead of GitHub.
+local_backend: true
+
 backend:
   name: github
   repo: revanthp/parmanuseniorhealth.github.io
@@ -90,6 +94,10 @@ collections:
   # from these pages, so a PDF uploaded on its own will not broadcast.
   # `type` is "alerts" (not the shared *type anchor) so Hugo picks up
   # layouts/alerts/single.html instead of the generic page layout.
+  # Alerts go stale, but delete/unpublish stay off: Decap commits both straight
+  # to main, which the branch protection rule rejects ("Changes must be made
+  # through a pull request"). Taking an alert down is the "Hide from website"
+  # field below — an ordinary edit, so it goes through the usual PR.
   - <<: *collection_defaults
     name: "alerts"
     label: "Alerts"
@@ -100,6 +108,12 @@ collections:
       - *title
       - *date
       - *lastmod
+      - name: "draft"
+        label: "Hide from website"
+        widget: "boolean"
+        required: false
+        default: false
+        hint: "Turn on to take this alert off the website and the feed. The alert stays here and can be shown again later."
       - name: "description"
         label: "Short summary"
         widget: "text"
@@ -119,7 +133,11 @@ collections:
         public_folder: "/files"
         hint: "Optional. One file only. Its link is included in the notification."
       - *tags
-      - *body
+      # Not the shared *body anchor: an alert can be just a headline, a summary
+      # and a PDF, so the body is optional here while it stays required elsewhere.
+      - <<: *body
+        required: false
+        hint: "Optional. Leave empty if the summary and the attachment say everything."
 
   # — General Services —
   - <<: *collection_defaults
